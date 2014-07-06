@@ -95,7 +95,7 @@ public class DefaultPlayerPrefixHandler implements PlayerPrefixHandler {
         }        
         if (format.contains("%f")) {
             // All Groups
-            List<String> groups = getPlayerGroups(playerName);
+            List<String> groups = getPlayerGroups(service, uuid);
             Collections.reverse(groups); // groups is in application order. We actually want it in display order.
             StringBuilder sb = new StringBuilder();
             for (String group : groups) {
@@ -108,7 +108,7 @@ public class DefaultPlayerPrefixHandler implements PlayerPrefixHandler {
         }
         if (format.contains("%l")) {
             // All Groups Reversed
-            List<String> groups = getPlayerGroups(playerName);
+            List<String> groups = getPlayerGroups(service, uuid);
             StringBuilder sb = new StringBuilder();
             for (String group : groups) {
                 String value = service.getGroupMetadata(group, isPrefix ? MetadataConstants.PREFIX_KEY : MetadataConstants.SUFFIX_KEY, String.class);
