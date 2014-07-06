@@ -15,6 +15,8 @@
  */
 package org.tyrannyofheaven.bukkit.zPermissions.dao;
 
+import static org.tyrannyofheaven.bukkit.util.uuid.UuidUtils.uncanonicalizeUuid;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -28,6 +30,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -73,33 +76,33 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized Boolean getPermission(String name, boolean group, String region, String world, String permission) {
-        return super.getPermission(name, group, region, world, permission);
+    public synchronized Boolean getPermission(String name, UUID uuid, boolean group, String region, String world, String permission) {
+        return super.getPermission(name, uuid, group, region, world, permission);
     }
 
     @Override
-    public synchronized void setPermission(String name, boolean group, String region, String world, String permission, boolean value) {
-        super.setPermission(name, group, region, world, permission, value);
+    public synchronized void setPermission(String name, UUID uuid, boolean group, String region, String world, String permission, boolean value) {
+        super.setPermission(name, uuid, group, region, world, permission, value);
     }
 
     @Override
-    public synchronized boolean unsetPermission(String name, boolean group, String region, String world, String permission) {
-        return super.unsetPermission(name, group, region, world, permission);
+    public synchronized boolean unsetPermission(String name, UUID uuid, boolean group, String region, String world, String permission) {
+        return super.unsetPermission(name, uuid, group, region, world, permission);
     }
 
     @Override
-    public synchronized void addMember(String groupName, String member, Date expiration) {
-        super.addMember(groupName, member, expiration);
+    public synchronized void addMember(String groupName, UUID memberUuid, String memberName, Date expiration) {
+        super.addMember(groupName, memberUuid, memberName, expiration);
     }
 
     @Override
-    public synchronized boolean removeMember(String groupName, String member) {
-        return super.removeMember(groupName, member);
+    public synchronized boolean removeMember(String groupName, UUID memberUuid) {
+        return super.removeMember(groupName, memberUuid);
     }
 
     @Override
-    public synchronized List<Membership> getGroups(String member) {
-        return super.getGroups(member);
+    public synchronized List<Membership> getGroups(UUID memberUuid) {
+        return super.getGroups(memberUuid);
     }
 
     @Override
@@ -108,8 +111,8 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized PermissionEntity getEntity(String name, boolean group) {
-        return super.getEntity(name, group);
+    public synchronized PermissionEntity getEntity(String name, UUID uuid, boolean group) {
+        return super.getEntity(name, uuid, group);
     }
 
     @Override
@@ -118,8 +121,8 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized void setGroup(String playerName, String groupName, Date expiration) {
-        super.setGroup(playerName, groupName, expiration);
+    public synchronized void setGroup(UUID playerUuid, String playerName, String groupName, Date expiration) {
+        super.setGroup(playerUuid, playerName, groupName, expiration);
     }
 
     @Override
@@ -133,8 +136,8 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized boolean deleteEntity(String name, boolean group) {
-        return super.deleteEntity(name, group);
+    public synchronized boolean deleteEntity(String name, UUID uuid, boolean group) {
+        return super.deleteEntity(name, uuid, group);
     }
 
     @Override
@@ -143,8 +146,8 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized List<Entry> getEntries(String name, boolean group) {
-        return super.getEntries(name, group);
+    public synchronized List<Entry> getEntries(String name, UUID uuid, boolean group) {
+        return super.getEntries(name, uuid, group);
     }
 
     @Override
@@ -158,28 +161,33 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     @Override
-    public synchronized Object getMetadata(String name, boolean group, String metadataName) {
-        return super.getMetadata(name, group, metadataName);
+    public synchronized Object getMetadata(String name, UUID uuid, boolean group, String metadataName) {
+        return super.getMetadata(name, uuid, group, metadataName);
     }
 
     @Override
-    public synchronized List<EntityMetadata> getAllMetadata(String name, boolean group) {
-        return super.getAllMetadata(name, group);
+    public synchronized List<EntityMetadata> getAllMetadata(String name, UUID uuid, boolean group) {
+        return super.getAllMetadata(name, uuid, group);
     }
 
     @Override
-    public synchronized void setMetadata(String name, boolean group, String metadataName, Object value) {
-        super.setMetadata(name, group, metadataName, value);
+    public synchronized void setMetadata(String name, UUID uuid, boolean group, String metadataName, Object value) {
+        super.setMetadata(name, uuid, group, metadataName, value);
     }
 
     @Override
-    public synchronized boolean unsetMetadata(String name, boolean group, String metadataName) {
-        return super.unsetMetadata(name, group, metadataName);
+    public synchronized boolean unsetMetadata(String name, UUID uuid, boolean group, String metadataName) {
+        return super.unsetMetadata(name, uuid, group, metadataName);
     }
 
     @Override
     public synchronized void setParents(String groupName, List<String> parentNames) {
         super.setParents(groupName, parentNames);
+    }
+
+    @Override
+    public synchronized void updateDisplayName(UUID uuid, String displayName) {
+        super.updateDisplayName(uuid, displayName);
     }
 
     /**
@@ -204,7 +212,9 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
         Yaml yaml = new Yaml(new SafeConstructor(), new Representer(), options);
         Writer out = new FileWriter(newFile);
         try {
-            out.write("# DO NOT EDIT -- file is written to periodically!\n");
+            out.write("# DO NOT EDIT -- file is written to periodically!\n" +
+                    "# Seriously, do not edit. Today it is YAML, tomorrow it may not be.\n" +
+                    "# If you edit this file and you have problems, you are on your own!\n");
             yaml.dump(dump, out);
         }
         finally {
@@ -260,9 +270,10 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     // Dump state of entire system to (YAML-friendly) map
     private Map<String, Object> dump() {
         // Players first
-        List<Map<String, Object>> players = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> players = new ArrayList<>();
         for (PermissionEntity player : Utils.sortPlayers(getPlayers().values())) {
-            Map<String, Object> playerMap = new LinkedHashMap<String, Object>();
+            Map<String, Object> playerMap = new LinkedHashMap<>();
+            playerMap.put("uuid", player.getName());
             playerMap.put("name", player.getDisplayName());
             playerMap.put("permissions", dumpPermissions(player));
             playerMap.put("metadata", dumpMetadata(player));
@@ -270,30 +281,33 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
         }
 
         // Groups next
-        List<Map<String, Object>> groups = new ArrayList<Map<String, Object>>();
+        List<Map<String, Object>> groups = new ArrayList<>();
         for (PermissionEntity group : Utils.sortGroups(getGroups().values())) {
-            Map<String, Object> groupMap = new LinkedHashMap<String, Object>();
+            Map<String, Object> groupMap = new LinkedHashMap<>();
             groupMap.put("name", group.getDisplayName());
             groupMap.put("permissions", dumpPermissions(group));
             groupMap.put("metadata", dumpMetadata(group));
             groupMap.put("priority", group.getPriority());
             List<PermissionEntity> parents = group.getParents();
             if (!parents.isEmpty()) {
-                List<String> parentNames = new ArrayList<String>(parents.size());
+                List<String> parentNames = new ArrayList<>(parents.size());
                 for (PermissionEntity parent : parents)
                     parentNames.add(parent.getDisplayName());
                 groupMap.put("parents", parentNames);
             }
             // Permanent members
-            List<String> members = new ArrayList<String>();
-            List<Map<String, Object>> tempMembers = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> members = new ArrayList<>();
+            List<Map<String, Object>> tempMembers = new ArrayList<>();
             for (Membership membership : Utils.sortMemberships(group.getMemberships())) {
+                Map<String, Object> tempMemberMap = new LinkedHashMap<>();
+                tempMemberMap.put("uuid", membership.getMember());
+                tempMemberMap.put("name", membership.getDisplayName());
                 if (membership.getExpiration() == null) {
-                    members.add(membership.getMember());
+                    members.add(tempMemberMap);
                 }
                 else {
-                    Map<String, Object> tempMemberMap = new LinkedHashMap<String, Object>();
-                    tempMemberMap.put("member", membership.getMember());
+                    tempMemberMap.put("uuid", membership.getMember());
+                    tempMemberMap.put("name", membership.getDisplayName());
                     tempMemberMap.put("expiration", membership.getExpiration());
 
                     tempMembers.add(tempMemberMap);
@@ -305,7 +319,7 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
             groups.add(groupMap);
         }
 
-        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("players", players);
         result.put("groups", groups);
         return result;
@@ -317,9 +331,10 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
         MemoryState memoryState = new MemoryState();
 
         for (Map<String, Object> playerMap : (List<Map<String, Object>>)input.get("players")) {
+            UUID uuid = uncanonicalizeUuid((String)playerMap.get("uuid"));
             String name = (String)playerMap.get("name");
             Map<String, Boolean> permissions = (Map<String, Boolean>)playerMap.get("permissions");
-            PermissionEntity player = getEntity(memoryState, name, false);
+            PermissionEntity player = getEntity(memoryState, name, uuid, false);
             loadPermissions(memoryState, permissions, player);
             Map<String, Object> metadata = (Map<String, Object>)playerMap.get("metadata");
             if (metadata == null) // backwards compat
@@ -333,7 +348,7 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
             Number priority = (Number)groupMap.get("priority");
             String parent = (String)groupMap.get("parent");
             List<String> parents = (List<String>)groupMap.get("parents");
-            List<String> members = (List<String>)groupMap.get("members");
+            List<Map<String, Object>> members = (List<Map<String, Object>>)groupMap.get("members");
             List<Map<String, Object>> tempMembers = (List<Map<String, Object>>)groupMap.get("tempmembers");
             if (tempMembers == null) // backwards compat
                 tempMembers = Collections.emptyList();
@@ -341,13 +356,13 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
             if (metadata == null) // backwards compat
                 metadata = Collections.emptyMap();
 
-            PermissionEntity group = getEntity(memoryState, name, true);
+            PermissionEntity group = getEntity(memoryState, name, null, true);
             loadPermissions(memoryState, permissions, group);
             loadMetadata(metadata, group);
             group.setPriority(priority.intValue());
             if (parent != null) {
                 // Backwards compatibility
-                PermissionEntity parentEntity = getEntity(memoryState, parent, true);
+                PermissionEntity parentEntity = getEntity(memoryState, parent, null, true);
 
                 Inheritance i = new Inheritance();
                 i.setChild(group);
@@ -361,7 +376,7 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
             else if (parents != null) {
                 int order = 0;
                 for (String p : parents) {
-                    PermissionEntity parentEntity = getEntity(memoryState, p, true);
+                    PermissionEntity parentEntity = getEntity(memoryState, p, null, true);
                     
                     Inheritance i = new Inheritance();
                     i.setChild(group);
@@ -374,9 +389,10 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
                     parentEntity.getInheritancesAsParent().add(i);
                 }
             }
-            for (String member : members) {
+            for (Map<String, Object> memberMap : members) {
                 Membership membership = new Membership();
-                membership.setMember(member.toLowerCase());
+                membership.setMember(((String)memberMap.get("uuid")).toLowerCase());
+                membership.setDisplayName(((String)memberMap.get("name")));
                 membership.setGroup(group);
                 group.getMemberships().add(membership);
                 
@@ -384,7 +400,8 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
             }
             for (Map<String, Object> tempMemberMap : tempMembers) {
                 Membership membership = new Membership();
-                membership.setMember(((String)tempMemberMap.get("member")).toLowerCase());
+                membership.setMember(((String)tempMemberMap.get("uuid")).toLowerCase());
+                membership.setDisplayName(((String)tempMemberMap.get("name")));
                 membership.setGroup(group);
                 membership.setExpiration((Date)tempMemberMap.get("expiration"));
                 group.getMemberships().add(membership);
@@ -400,7 +417,7 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
 
     // Create a map that describes permissions for a PermissionEntity
     private Map<String, Boolean> dumpPermissions(PermissionEntity entity) {
-        Map<String, Boolean> result = new LinkedHashMap<String, Boolean>();
+        Map<String, Boolean> result = new LinkedHashMap<>();
         for (Entry e : Utils.sortPermissions(entity.getPermissions())) {
             QualifiedPermission wp = new QualifiedPermission(e.getRegion() == null ? null : e.getRegion().getName(),
                     e.getWorld() == null ? null : e.getWorld().getName(), e.getPermission());
@@ -426,7 +443,7 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
     }
 
     private Map<String, Object> dumpMetadata(PermissionEntity entity) {
-        Map<String, Object> result = new LinkedHashMap<String, Object>();
+        Map<String, Object> result = new LinkedHashMap<>();
         for (EntityMetadata em : Utils.sortMetadata(entity.getMetadata())) {
             result.put(em.getName(), em.getValue());
         }
@@ -527,6 +544,16 @@ public class MemoryPermissionDao extends BaseMemoryPermissionDao {
 
     @Override
     protected void deleteInheritance(Inheritance inheritance) {
+        setDirty();
+    }
+
+    @Override
+    protected void updateDisplayName(PermissionEntity entity) {
+        setDirty();
+    }
+
+    @Override
+    protected void updateDisplayName(Membership membership) {
         setDirty();
     }
 

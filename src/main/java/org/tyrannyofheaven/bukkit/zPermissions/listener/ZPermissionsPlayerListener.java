@@ -21,11 +21,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.tyrannyofheaven.bukkit.util.uuid.UuidResolver;
 import org.tyrannyofheaven.bukkit.zPermissions.RefreshCause;
 import org.tyrannyofheaven.bukkit.zPermissions.ZPermissionsCore;
 
@@ -41,9 +43,20 @@ public class ZPermissionsPlayerListener implements Listener {
     
     private final Plugin plugin;
 
-    public ZPermissionsPlayerListener(ZPermissionsCore core, Plugin plugin) {
+    private final UuidResolver uuidResolver;
+
+    public ZPermissionsPlayerListener(ZPermissionsCore core, Plugin plugin, UuidResolver uuidResolver) {
         this.core = core;
         this.plugin = plugin;
+        this.uuidResolver = uuidResolver;
+    }
+
+    @EventHandler(priority=EventPriority.MONITOR)
+    public void onAsyncPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
+        if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            // Update display name
+            core.updateDisplayName(event.getUniqueId(), event.getName());
+        }
     }
 
     // Do this early for the benefit of anything listening on the same event
@@ -90,6 +103,8 @@ public class ZPermissionsPlayerListener implements Listener {
                 core.refreshExpirations();
             }
         });
+        // Pre-load cache of UuidResolver
+        uuidResolver.preload(event.getPlayer().getName(), event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority=EventPriority.LOWEST)

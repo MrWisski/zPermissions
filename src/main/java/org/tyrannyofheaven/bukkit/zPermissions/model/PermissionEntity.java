@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -33,6 +34,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
+
+import org.tyrannyofheaven.bukkit.util.ToHUtils;
+import org.tyrannyofheaven.bukkit.util.uuid.UuidUtils;
 
 /**
  * The permission entity &mdash; something that can have a set of permission
@@ -60,18 +64,18 @@ public class PermissionEntity {
 
     private PermissionEntity parent;
     
-    private Set<Entry> permissions = new HashSet<Entry>();
+    private Set<Entry> permissions = new HashSet<>();
 
-    private Set<Membership> memberships = new HashSet<Membership>();
+    private Set<Membership> memberships = new HashSet<>();
 
-    private Set<Inheritance> inheritancesAsParent = new HashSet<Inheritance>();
+    private Set<Inheritance> inheritancesAsParent = new HashSet<>();
     
-    private Set<Inheritance> inheritancesAsChild = new HashSet<Inheritance>();
+    private Set<Inheritance> inheritancesAsChild = new HashSet<>();
 
-    private Set<EntityMetadata> metadata = new HashSet<EntityMetadata>();
+    private Set<EntityMetadata> metadata = new HashSet<>();
 
     @Transient
-    private final Map<String, EntityMetadata> metadataMap = new HashMap<String, EntityMetadata>();
+    private final Map<String, EntityMetadata> metadataMap = new HashMap<>();
 
     @Id
     public Long getId() {
@@ -164,9 +168,9 @@ public class PermissionEntity {
 
     @Transient
     public List<PermissionEntity> getParents() {
-        List<Inheritance> inheritances = new ArrayList<Inheritance>(getInheritancesAsChild());
+        List<Inheritance> inheritances = new ArrayList<>(getInheritancesAsChild());
         Collections.sort(inheritances);
-        List<PermissionEntity> result = new ArrayList<PermissionEntity>(inheritances.size());
+        List<PermissionEntity> result = new ArrayList<>(inheritances.size());
         for (Inheritance i : inheritances)
             result.add(i.getParent());
         return result;
@@ -174,7 +178,7 @@ public class PermissionEntity {
 
     @Transient
     public Set<PermissionEntity> getChildrenNew() {
-        Set<PermissionEntity> result = new LinkedHashSet<PermissionEntity>(getInheritancesAsParent().size());
+        Set<PermissionEntity> result = new LinkedHashSet<>(getInheritancesAsParent().size());
         for (Inheritance i : getInheritancesAsParent())
             result.add(i.getChild());
         return result;
@@ -201,6 +205,12 @@ public class PermissionEntity {
         }
     }
 
+    @Transient
+    public UUID getUuid() {
+        ToHUtils.assertFalse(isGroup(), "Only valid for players");
+        return UuidUtils.uncanonicalizeUuid(getName());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
@@ -220,7 +230,7 @@ public class PermissionEntity {
 
     @Override
     public String toString() {
-        return String.format("Entity[%s,%s]", getName(), isGroup());
+        return String.format("Entity[%s,%s,%s]", getName(), getDisplayName(), isGroup());
     }
 
 }

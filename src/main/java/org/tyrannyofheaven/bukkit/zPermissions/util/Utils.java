@@ -16,7 +16,7 @@
 package org.tyrannyofheaven.bukkit.zPermissions.util;
 
 import static org.tyrannyofheaven.bukkit.util.ToHMessageUtils.colorize;
-import static org.tyrannyofheaven.bukkit.util.ToHMessageUtils.sendMessage;
+import static org.tyrannyofheaven.bukkit.util.ToHUtils.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +46,7 @@ import org.bukkit.plugin.Plugin;
 import org.tyrannyofheaven.bukkit.util.ToHMessageUtils;
 import org.tyrannyofheaven.bukkit.util.ToHStringUtils;
 import org.tyrannyofheaven.bukkit.util.command.ParseException;
+import org.tyrannyofheaven.bukkit.util.uuid.UuidUtils;
 import org.tyrannyofheaven.bukkit.zPermissions.dao.PermissionDao;
 import org.tyrannyofheaven.bukkit.zPermissions.model.EntityMetadata;
 import org.tyrannyofheaven.bukkit.zPermissions.model.Entry;
@@ -58,10 +60,10 @@ import org.tyrannyofheaven.bukkit.zPermissions.model.PermissionEntity;
  */
 public class Utils {
 
-    public final static Comparator<PermissionEntity> PERMISSION_ENTITY_ALPHA_COMPARATOR = new Comparator<PermissionEntity>() {
+    private final static Comparator<PermissionEntity> PERMISSION_ENTITY_ALPHA_COMPARATOR = new Comparator<PermissionEntity>() {
         @Override
         public int compare(PermissionEntity a, PermissionEntity b) {
-            return a.getDisplayName().compareTo(b.getDisplayName());
+            return a.getName().compareTo(b.getName()); // In the case of players, sort by UUID
         }
     };
 
@@ -109,19 +111,19 @@ public class Utils {
     private static final Comparator<Membership> MEMBERSHIP_COMPARATOR = new Comparator<Membership>() {
         @Override
         public int compare(Membership a, Membership b) {
-            return a.getMember().compareToIgnoreCase(b.getMember());
+            return a.getMember().compareToIgnoreCase(b.getMember()); // NB By UUID
         }
     };
 
     public static List<PermissionEntity> sortPlayers(Collection<PermissionEntity> players) {
-        List<PermissionEntity> result = new ArrayList<PermissionEntity>(players);
+        List<PermissionEntity> result = new ArrayList<>(players);
         // Just sort alphabetically
         Collections.sort(result, PERMISSION_ENTITY_ALPHA_COMPARATOR);
         return result;
     }
 
     public static List<PermissionEntity> sortGroups(Collection<PermissionEntity> groups) {
-        LinkedList<PermissionEntity> scanList = new LinkedList<PermissionEntity>();
+        LinkedList<PermissionEntity> scanList = new LinkedList<>();
         
         // Seed with parent-less groups
         for (PermissionEntity group : groups) {
@@ -130,7 +132,7 @@ public class Utils {
         }
         Collections.sort(scanList, PERMISSION_ENTITY_ALPHA_COMPARATOR);
 
-        Set<PermissionEntity> result = new LinkedHashSet<PermissionEntity>(groups.size());
+        Set<PermissionEntity> result = new LinkedHashSet<>(groups.size());
 
         // BFS from queue to get total ordering
         while (!scanList.isEmpty()) {
@@ -140,7 +142,7 @@ public class Utils {
             result.add(group);
             
             // Grab children and add to end of scanList
-            List<PermissionEntity> children = new ArrayList<PermissionEntity>(group.getChildrenNew());
+            List<PermissionEntity> children = new ArrayList<>(group.getChildrenNew());
             
             // Sort children alphabetically
             Collections.sort(children, PERMISSION_ENTITY_ALPHA_COMPARATOR);
@@ -148,23 +150,23 @@ public class Utils {
             scanList.addAll(children);
         }
 
-        return new ArrayList<PermissionEntity>(result);
+        return new ArrayList<>(result);
     }
 
     public static List<Entry> sortPermissions(Collection<Entry> entries) {
-        List<Entry> result = new ArrayList<Entry>(entries);
+        List<Entry> result = new ArrayList<>(entries);
         Collections.sort(result, ENTRY_COMPARATOR);
         return result;
     }
 
     public static List<EntityMetadata> sortMetadata(Collection<EntityMetadata> metadata) {
-        List<EntityMetadata> result = new ArrayList<EntityMetadata>(metadata);
+        List<EntityMetadata> result = new ArrayList<>(metadata);
         Collections.sort(result, METADATA_COMPARATOR);
         return result;
     }
 
     public static List<Membership> sortMemberships(Collection<Membership> memberships) {
-        List<Membership> result = new ArrayList<Membership>(memberships);
+        List<Membership> result = new ArrayList<>(memberships);
         Collections.sort(result, MEMBERSHIP_COMPARATOR);
         return result;
     }
@@ -174,7 +176,7 @@ public class Utils {
     }
 
     public static void displayPermissions(Plugin plugin, CommandSender sender, List<String> lines, List<String> header, Map<String, Boolean> permissions, String filter) {
-        List<PermissionInfo> permList = new ArrayList<PermissionInfo>(permissions.size());
+        List<PermissionInfo> permList = new ArrayList<>(permissions.size());
         for (Map.Entry<String, Boolean> me : permissions.entrySet()) {
             permList.add(new PermissionInfo(me.getKey(), me.getValue(), null));
         }
@@ -190,13 +192,13 @@ public class Utils {
             header = Collections.emptyList();
 
         // Sort for display
-        permissions = new ArrayList<PermissionInfo>(permissions); // make copy
+        permissions = new ArrayList<>(permissions); // make copy
         Collections.sort(permissions, PERMISSION_INFO_COMPARATOR);
 
         // Convert to lines and filter
         boolean display = false;
         if (lines == null) {
-            lines = new ArrayList<String>(header.size() + permissions.size());
+            lines = new ArrayList<>(header.size() + permissions.size());
             display = true;
         }
         lines.addAll(header);
@@ -272,16 +274,16 @@ public class Utils {
         return sb.toString();
     }
 
-    public static List<String> toMembers(Collection<Membership> memberships) {
-        List<String> result = new ArrayList<String>(memberships.size());
+    public static List<String> toMembers(Collection<Membership> memberships, boolean showUuid) {
+        List<String> result = new ArrayList<>(memberships.size());
         for (Membership membership : memberships) {
-            result.add(membership.getMember());
+            result.add(formatPlayerName(membership, showUuid));
         }
         return result;
     }
 
     public static List<String> toGroupNames(Collection<Membership> memberships) {
-        List<String> result = new ArrayList<String>(memberships.size());
+        List<String> result = new ArrayList<>(memberships.size());
         for (Membership membership : memberships) {
             result.add(membership.getGroup().getDisplayName());
         }
@@ -289,7 +291,7 @@ public class Utils {
     }
 
     public static List<Membership> filterExpired(Collection<Membership> memberships) {
-        List<Membership> result = new ArrayList<Membership>(memberships.size());
+        List<Membership> result = new ArrayList<>(memberships.size());
         Date now = new Date();
         for (Membership membership : memberships) {
             if (membership.getExpiration() == null || membership.getExpiration().after(now))
@@ -382,18 +384,6 @@ public class Utils {
     }
 
     /**
-     * Give a little warning if the player isn't online.
-     * 
-     * @param sender the CommandSender to send warning to
-     * @param playerName the player name
-     */
-    public static void checkPlayer(CommandSender sender, String playerName) {
-        if (Bukkit.getPlayerExact(playerName) == null) {
-            sendMessage(sender, colorize("{GRAY}(Player not online, make sure the name is correct)"));
-        }
-    }
-
-    /**
      * Display a diff between two sets of permissions.
      * 
      * @param plugin the plugin
@@ -413,16 +403,16 @@ public class Utils {
             header = Collections.emptyList();
 
         // Make copy of header since we modify it
-        List<String> header0 = new ArrayList<String>(header);
+        List<String> header0 = new ArrayList<>(header);
 
         // Now we diff
-        Set<String> added = new HashSet<String>(otherPermissions.keySet());
+        Set<String> added = new HashSet<>(otherPermissions.keySet());
         added.removeAll(permissions.keySet());
         
-        Set<String> removed = new HashSet<String>(permissions.keySet());
+        Set<String> removed = new HashSet<>(permissions.keySet());
         removed.removeAll(otherPermissions.keySet());
         
-        Set<String> changed = new HashSet<String>(permissions.keySet());
+        Set<String> changed = new HashSet<>(permissions.keySet());
         changed.retainAll(otherPermissions.keySet());
         // Now we know what's common, actually determine what's different
         for (Iterator<String> i = changed.iterator(); i.hasNext();) {
@@ -433,7 +423,7 @@ public class Utils {
             }
         }
 
-        List<String> lines = new ArrayList<String>();
+        List<String> lines = new ArrayList<>();
 
         if (!added.isEmpty()) {
             header0.add(addedHeader);
@@ -462,7 +452,7 @@ public class Utils {
 
     // Given a permissions map and a set of keys, extract a subset of that map
     private static Map<String, Boolean> getPermissionsSubset(Map<String, Boolean> permissions, Set<String> keys) {
-        Map<String, Boolean> result = new LinkedHashMap<String, Boolean>();
+        Map<String, Boolean> result = new LinkedHashMap<>();
         for (Map.Entry<String, Boolean> me : permissions.entrySet()) {
             if (keys.contains(me.getKey()))
                 result.put(me.getKey(), me.getValue());
@@ -484,12 +474,21 @@ public class Utils {
         }
     }
 
-    public static void validatePlayer(PermissionDao dao, String defaultGroup, String playerName, List<String> header) {
-        if (dao.getGroups(playerName).isEmpty() &&
-                dao.getEntity(playerName, false) == null) {
+    public static void validatePlayer(PermissionDao dao, String defaultGroup, UUID uuid, String playerName, List<String> header) {
+        if (dao.getGroups(uuid).isEmpty() &&
+                dao.getEntity(playerName, uuid, false) == null) {
             // Doesn't exist in the system
             header.add(String.format(colorize("{GRAY}(Player \"%s\" not in system. Assuming member of group \"%s\")"), playerName, defaultGroup));
         }
+    }
+
+    public static String formatPlayerName(PermissionEntity player, boolean showUuid) {
+        assertFalse(player.isGroup());
+        return UuidUtils.formatPlayerName(player.getUuid(), player.getDisplayName(), showUuid);
+    }
+
+    public static String formatPlayerName(Membership membership, boolean showUuid) {
+        return UuidUtils.formatPlayerName(membership.getUuid(), membership.getDisplayName(), showUuid);
     }
 
     public static class PermissionInfo {
