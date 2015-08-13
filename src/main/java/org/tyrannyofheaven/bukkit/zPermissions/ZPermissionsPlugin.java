@@ -509,7 +509,16 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         		this.uuidprov = (UUIDProvider)uuidplugin;
         		getLogger().info("Found UUIDProvider plugin! Using UUIDProvider for Resolving/Converting services!");
         	} else {
-        		getLogger().warning("Could not find UUIDProvider - Will use default UUID Resolving/Converting services - NOT COMPATIBLE WITH 1.6.4!");
+        		getLogger().severe("******************************************************************");
+        		getLogger().severe("Could not locate/initialize the UUIDProvider Plugin!");
+        		getLogger().severe("This version of zPermissions REQUIRES UUIDProvider for UUID");
+        		getLogger().severe("services! Please install UUIDProvider!");
+        		getLogger().severe("");
+        		getLogger().severe("You can press Control-C to stop the server. Server will shut down");
+        		getLogger().severe("in 30 seconds!");
+        		getLogger().severe("******************************************************************");
+        		Thread.sleep(30000);
+        		Bukkit.getServer().shutdown();
         	}
         } catch (Exception e) {
         	getLogger().severe("Caught exception establishing external UUID Provider services : ");
@@ -608,6 +617,8 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             // Set up UuidResolver cascade if StorageStrategy implementation happens
             // to also implement UuidResolver
             if (storageStrategy instanceof UuidResolver) {
+            	//DB Strategy is no longer an instance of a UuidResolver.
+            	//Unneeded thanks to UUIDProvider's caching.
                 log(this, "Using storage strategy as first-level UUID resolver.");
                 uuidResolver = new CascadingUuidResolver((UuidResolver)storageStrategy, uuidResolver);
             }
@@ -830,8 +841,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             Bukkit.getScheduler().runTask(this, new Runnable() {
                 @Override
                 public void run() {
-                    @SuppressWarnings("deprecation")
-					Player player = Bukkit.getPlayer(UUIDProvider.retrieveName(playerUuid));
+                    Player player = Bukkit.getPlayer(UUIDProvider.retrieveName(playerUuid));
                     if (player != null) {
                         ZPermissionsPlayerUpdateEvent event = new ZPermissionsPlayerUpdateEvent(player, cause);
                         Bukkit.getPluginManager().callEvent(event);
@@ -946,7 +956,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
      * @param uuid the UUID of the player
      * @param cause the cause of this refresh
      */
-    @SuppressWarnings("deprecation")
+
 	@Override
     public void refreshPlayer(UUID uuid, RefreshCause cause) {
         Player player = Bukkit.getPlayer(UUIDProvider.retrieveName(uuid));
@@ -992,7 +1002,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
      * 
      * @param uuid the UUID of the player
      */
-    @SuppressWarnings("deprecation")
+
 	@Override
     public void refreshExpirations(UUID uuid) {
         if (Bukkit.getPlayer(UUIDProvider.retrieveName(uuid)) != null)

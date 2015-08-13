@@ -10,24 +10,36 @@ import org.tyrannyofheaven.bukkit.util.uuid.UuidDisplayName;
 import org.tyrannyofheaven.bukkit.util.uuid.UuidResolver;
 import org.tyrannyofheaven.bukkit.zPermissions.ZPermissionsPlugin;
 
-import net.kaikk.mc.uuidprovider.PlayerData;
 import net.kaikk.mc.uuidprovider.UUIDFetcher;
 import net.kaikk.mc.uuidprovider.UUIDProvider;
 
+/**
+ * UUIDProvider resolver for zPermissions - Part of the 1.6.4 backport - 12-8-2015
+ * 
+ * @author MrWisski
+ * 
+ */
 public class UUIDProvResolver implements UuidResolver {
 
 	private UUIDProvider uuidprov = null;
 	private ZPermissionsPlugin plugin = null;
 	private boolean enabled = false;
 	
-	private static final UuidDisplayName NULL_UDN = new UuidDisplayName(UUID.randomUUID(), "NOT FOUND");
+	//Not needed, it would seem.
+	//private static final UuidDisplayName NULL_UDN = new UuidDisplayName(UUID.randomUUID(), "NOT FOUND");
 	
 	public UUIDProvResolver(UUIDProvider provider, ZPermissionsPlugin plug){
-		uuidprov = provider;
-		plugin = plug;
-		if(uuidprov != null){
+		if(uuidprov != null && provider instanceof UUIDProvider){
 			enabled = true;
+			uuidprov = provider;
+		} else {
+			enabled = false;
+			uuidprov = null;
+			plugin.getLogger().severe("Was not passed a valid instance of UUIDProvider!");
 		}
+
+		plugin = plug;
+		
 	}
 	
 	@Override
