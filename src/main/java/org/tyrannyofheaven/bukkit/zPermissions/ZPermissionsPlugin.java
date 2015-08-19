@@ -454,7 +454,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
 
         // Really shut off all async tasks
         getServer().getScheduler().cancelTasks(this);
-     
+
         // Ensure storage is shut down properly
         if (storageStrategy != null) {
             storageStrategy.shutdown();
@@ -509,16 +509,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         		this.uuidprov = (UUIDProvider)uuidplugin;
         		getLogger().info("Found UUIDProvider plugin! Using UUIDProvider for Resolving/Converting services!");
         	} else {
-        		getLogger().severe("******************************************************************");
-        		getLogger().severe("Could not locate/initialize the UUIDProvider Plugin!");
-        		getLogger().severe("This version of zPermissions REQUIRES UUIDProvider for UUID");
-        		getLogger().severe("services! Please install UUIDProvider!");
-        		getLogger().severe("");
-        		getLogger().severe("You can press Control-C to stop the server. Server will shut down");
-        		getLogger().severe("in 30 seconds!");
-        		getLogger().severe("******************************************************************");
-        		Thread.sleep(30000);
-        		Bukkit.getServer().shutdown();
+        		getLogger().warning("Could not find UUIDProvider - Will use default zPerms UUID Resolving/Converting services - NOT COMPATIBLE WITH 1.6.4!");
         	}
         } catch (Exception e) {
         	getLogger().severe("Caught exception establishing external UUID Provider services : ");
@@ -617,8 +608,6 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             // Set up UuidResolver cascade if StorageStrategy implementation happens
             // to also implement UuidResolver
             if (storageStrategy instanceof UuidResolver) {
-            	//DB Strategy is no longer an instance of a UuidResolver.
-            	//Unneeded thanks to UUIDProvider's caching.
                 log(this, "Using storage strategy as first-level UUID resolver.");
                 uuidResolver = new CascadingUuidResolver((UuidResolver)storageStrategy, uuidResolver);
             }
@@ -681,7 +670,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             // Make sure everyone currently online has permissions
             // NB Do in foreground
             for (Player player : Bukkit.getOnlinePlayers()) {
-                refreshPlayer(UUIDProvider.retrieveUUID(player.getName()), RefreshCause.GROUP_CHANGE);
+                refreshPlayer(player.getUniqueId(), RefreshCause.GROUP_CHANGE);
             }
 
             // Start auto-refresh task, if one is configured
@@ -774,7 +763,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         player.removeMetadata(PLAYER_METADATA_KEY, this);
 
         // Remove dynamic permission and recalculate, if wanted
-        final String permName = DYNAMIC_PERMISSION_PREFIX + UUIDProvider.retrieveUUID(player.getName()).toString();
+        final String permName = DYNAMIC_PERMISSION_PREFIX + player.getUniqueId().toString();
         Bukkit.getPluginManager().removePermission(permName);
         if (recalculate) {
             for (Permissible p : Bukkit.getPluginManager().getPermissionSubscriptions(permName)) {
@@ -801,11 +790,11 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             // Kick the player, if configured to do so
             if (kickOnError && (kickOpsOnError || !player.isOp())) {
                 // Probably safer to do this synchronously
-                final UUID playerUuid = UUIDProvider.retrieveUUID(player.getName());
+                final String playerName = player.getName();
                 getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
                     @Override
                     public void run() {
-                        Player player = getServer().getPlayer(UUIDProvider.retrieveName(playerUuid));
+                        Player player = getServer().getPlayer(playerName);
                         if (player != null)
                             player.kickPlayer("Error determining your permissions");
                     }
@@ -820,7 +809,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         
         // Fire off event if requested and changed
         if (eventCause != null && changed) {
-            final UUID playerUuid = UUIDProvider.retrieveUUID(player.getName());
+            final String playerName = player.getName();
             // Translate RefreshEvent to ZPermissionsPlayerPermissionsChangeEvent.Cause
             // Kinda dumb, but I don't want internal code to depend on the event class.
             final ZPermissionsPlayerUpdateEvent.Cause cause;
@@ -841,7 +830,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             Bukkit.getScheduler().runTask(this, new Runnable() {
                 @Override
                 public void run() {
-                    Player player = Bukkit.getPlayer(UUIDProvider.retrieveName(playerUuid));
+                    Player player = Bukkit.getPlayer(playerName);
                     if (player != null) {
                         ZPermissionsPlayerUpdateEvent event = new ZPermissionsPlayerUpdateEvent(player, cause);
                         Bukkit.getPluginManager().callEvent(event);
@@ -864,7 +853,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         final Set<String> regions = getRegions(location, player);
 
         // Fetch existing state
-        final String permName = DYNAMIC_PERMISSION_PREFIX + UUIDProvider.retrieveUUID(player.getName()).toString();
+        final String permName = DYNAMIC_PERMISSION_PREFIX + player.getUniqueId().toString();
         Permission perm = Bukkit.getPluginManager().getPermission(permName);
 
         PlayerState playerState = getPlayerState(player);
@@ -893,7 +882,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             @Override
             public ResolverResult doInTransaction() throws Exception {
 //                fakeFailureChance();
-                return getResolver().resolvePlayer(UUIDProvider.retrieveUUID(player.getName()), world, regions);
+                return getResolver().resolvePlayer(player.getUniqueId(), world, regions);
             }
         }, true);
 
@@ -956,10 +945,9 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
      * @param uuid the UUID of the player
      * @param cause the cause of this refresh
      */
-
-	@Override
+    @Override
     public void refreshPlayer(UUID uuid, RefreshCause cause) {
-        Player player = Bukkit.getPlayer(UUIDProvider.retrieveName(uuid));
+        Player player = Bukkit.getPlayer(UUIDProvider.retrieve(uuid));
         if (player != null) {
             debug(this, "Refreshing player %s", player.getName());
             setBukkitPermissions(player, player.getLocation(), true, cause);
@@ -974,7 +962,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         debug(this, "Refreshing all online players");
         Set<UUID> toRefresh = new HashSet<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            toRefresh.add(UUIDProvider.retrieveUUID(player.getName()));
+            toRefresh.add(player.getUniqueId());
         }
         refreshTask.start(toRefresh);
     }
@@ -1002,10 +990,9 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
      * 
      * @param uuid the UUID of the player
      */
-
-	@Override
+    @Override
     public void refreshExpirations(UUID uuid) {
-        if (Bukkit.getPlayer(UUIDProvider.retrieveName(uuid)) != null)
+        if (Bukkit.getPlayer(UUIDProvider.retrieve(uuid)) != null)
             refreshExpirations();
     }
 
@@ -1021,7 +1008,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerState playerState = getPlayerState(player);
             if (playerState == null || playerState.getGroups().contains(groupName)) {
-                toRefresh.add(UUIDProvider.retrieveUUID(player.getName()));
+                toRefresh.add(player.getUniqueId());
             }
         }
         

@@ -98,7 +98,7 @@ public class VaultChatBridge extends ChatCompatibility {
 
     @Override
     public boolean getPlayerInfoBoolean(String world, OfflinePlayer player, String node, boolean defaultValue) {
-        Boolean result = service.getPlayerMetadata(UUIDProvider.retrieveUUID(player.getName()), node, Boolean.class);
+        Boolean result = service.getPlayerMetadata(UUIDProvider.retrieve(player.getName()), node, Boolean.class);
         if (result == null && config.isVaultMetadataIncludesGroup())
             result = service.getGroupMetadata(getPrimaryGroup(world, player), node, Boolean.class);
 
@@ -107,10 +107,10 @@ public class VaultChatBridge extends ChatCompatibility {
         else
             return result;
     }
-    
+
     @Override
     public double getPlayerInfoDouble(String world, OfflinePlayer player, String node, double defaultValue) {
-        Double result = service.getPlayerMetadata(UUIDProvider.retrieveUUID(player.getName()), node, Double.class);
+        Double result = service.getPlayerMetadata(UUIDProvider.retrieve(player.getName()), node, Double.class);
         if (result == null && config.isVaultMetadataIncludesGroup())
             result = service.getGroupMetadata(getPrimaryGroup(world, player), node, Double.class);
 
@@ -122,7 +122,7 @@ public class VaultChatBridge extends ChatCompatibility {
 
     @Override
     public int getPlayerInfoInteger(String world, OfflinePlayer player, String node, int defaultValue) {
-        Integer result = service.getPlayerMetadata(UUIDProvider.retrieveUUID(player.getName()), node, Integer.class);
+        Integer result = service.getPlayerMetadata(UUIDProvider.retrieve(player.getName()), node, Integer.class);
         if (result == null && config.isVaultMetadataIncludesGroup())
             result = service.getGroupMetadata(getPrimaryGroup(world, player), node, Integer.class);
 
@@ -134,7 +134,7 @@ public class VaultChatBridge extends ChatCompatibility {
 
     @Override
     public String getPlayerInfoString(String world, OfflinePlayer player, String node, String defaultValue) {
-        String result = service.getPlayerMetadata(UUIDProvider.retrieveUUID(player.getName()), node, String.class);
+        String result = service.getPlayerMetadata(UUIDProvider.retrieve(player.getName()), node, String.class);
         if (result == null && config.isVaultMetadataIncludesGroup())
             result = service.getGroupMetadata(getPrimaryGroup(world, player), node, String.class);
 
@@ -146,12 +146,12 @@ public class VaultChatBridge extends ChatCompatibility {
 
     @Override
     public String getPlayerPrefix(String world, OfflinePlayer player) {
-        return service.getPlayerPrefix(UUIDProvider.retrieveUUID(player.getName()));
+        return service.getPlayerPrefix(UUIDProvider.retrieve(player.getName()));
     }
 
     @Override
     public String getPlayerSuffix(String world, OfflinePlayer player) {
-        return service.getPlayerSuffix(UUIDProvider.retrieveUUID(player.getName()));
+        return service.getPlayerSuffix(UUIDProvider.retrieve(player.getName()));
     }
 
     @Override
@@ -231,7 +231,7 @@ public class VaultChatBridge extends ChatCompatibility {
 
         final UUID uuid;
         if (!group) {
-            uuid = UUIDProvider.retrieveUUID(player.getName());
+            uuid = UUIDProvider.retrieve(player.getName());
         }
         else uuid = null;
 

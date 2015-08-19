@@ -1,5 +1,5 @@
 /*
- * Copyright 2011, 2012 Allan Saddi <allan@saddi.com>
+ * Copyright 2011, 2012 ZerothAngel <zerothangel@tyrannyofheaven.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.tyrannyofheaven.bukkit.zPermissions.model.PermissionWorld;
 public class MemoryDaoTest extends AbstractDaoTest {
 
     public MemoryDaoTest() {
-        setDao(new MemoryPermissionDao());
+        getPermissionService().setPermissionDao(new FilePermissionDao(getPermissionService()));
     }
 
     @Override
@@ -38,12 +38,12 @@ public class MemoryDaoTest extends AbstractDaoTest {
 
     @Override
     protected PermissionWorld getWorld(String name) {
-        return ((MemoryPermissionDao)getDao()).getWorld(name);
+        return getPermissionService().getWorld(name);
     }
 
     @Override
     protected PermissionRegion getRegion(String name) {
-        return ((MemoryPermissionDao)getDao()).getRegion(name);
+        return getPermissionService().getRegion(name);
     }
 
 }

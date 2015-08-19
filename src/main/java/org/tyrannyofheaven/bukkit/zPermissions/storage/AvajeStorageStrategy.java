@@ -40,7 +40,7 @@ import org.tyrannyofheaven.bukkit.util.transaction.TransactionCallback;
 import org.tyrannyofheaven.bukkit.util.transaction.TransactionCallbackWithoutResult;
 import org.tyrannyofheaven.bukkit.util.transaction.TransactionStrategy;
 import org.tyrannyofheaven.bukkit.util.uuid.UuidDisplayName;
-//import org.tyrannyofheaven.bukkit.util.uuid.UuidResolver;
+import org.tyrannyofheaven.bukkit.util.uuid.UuidResolver;
 import org.tyrannyofheaven.bukkit.zPermissions.ReadOnlyException;
 import org.tyrannyofheaven.bukkit.zPermissions.dao.AvajePermissionDao;
 import org.tyrannyofheaven.bukkit.zPermissions.dao.InMemoryPermissionService;
@@ -55,8 +55,7 @@ import com.avaje.ebean.EbeanServer;
  * 
  * @author zerothangel
  */
-//public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreCommitHook, UuidResolver {
-public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreCommitHook {
+public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreCommitHook, UuidResolver {
 
     private final InMemoryPermissionService permissionService = new InMemoryPermissionService();
 
@@ -216,7 +215,7 @@ public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreC
 
     // UuidResolver methods (most are allowed to block)
 
-   // @Override
+    @Override
     public UuidDisplayName resolve(final String username) {
         return internalTransactionStrategy.execute(new TransactionCallback<UuidDisplayName>() {
             @Override
@@ -235,13 +234,13 @@ public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreC
         }, true /* always read-only */);
     }
 
-   // @Override
+    @Override
     public UuidDisplayName resolve(String username, boolean cacheOnly) {
         if (cacheOnly) return null; // No cache (because we ARE a cache) yet we must not block
         return resolve(username);
     }
 
-    //@Override
+    @Override
     public Map<String, UuidDisplayName> resolve(Collection<String> usernames) throws Exception {
         Map<String, UuidDisplayName> resolved = new LinkedHashMap<>();
         // Just resolve each name one at a time
@@ -252,7 +251,7 @@ public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreC
         return resolved;
     }
 
-    //@Override
+    @Override
     public void preload(final String username, final UUID uuid) {
         if (readOnlyMode) return; // Do nothing if read-only
 
@@ -283,7 +282,7 @@ public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreC
         });
     }
 
-    //@Override
+    @Override
     public void invalidate(final String username) {
         if (readOnlyMode)
             throw new ReadOnlyException();
@@ -306,7 +305,7 @@ public class AvajeStorageStrategy implements StorageStrategy, PreBeginHook, PreC
         });
     }
 
-    //@Override
+    @Override
     public void invalidateAll() {
         if (readOnlyMode)
             throw new ReadOnlyException();

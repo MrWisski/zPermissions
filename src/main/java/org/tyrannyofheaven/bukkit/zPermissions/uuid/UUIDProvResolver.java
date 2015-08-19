@@ -13,33 +13,18 @@ import org.tyrannyofheaven.bukkit.zPermissions.ZPermissionsPlugin;
 import net.kaikk.mc.uuidprovider.UUIDFetcher;
 import net.kaikk.mc.uuidprovider.UUIDProvider;
 
-/**
- * UUIDProvider resolver for zPermissions - Part of the 1.6.4 backport - 12-8-2015
- * 
- * @author MrWisski
- * 
- */
 public class UUIDProvResolver implements UuidResolver {
 
 	private UUIDProvider uuidprov = null;
 	private ZPermissionsPlugin plugin = null;
 	private boolean enabled = false;
 	
-	//Not needed, it would seem.
-	//private static final UuidDisplayName NULL_UDN = new UuidDisplayName(UUID.randomUUID(), "NOT FOUND");
-	
 	public UUIDProvResolver(UUIDProvider provider, ZPermissionsPlugin plug){
-		if(uuidprov != null && provider instanceof UUIDProvider){
-			enabled = true;
-			uuidprov = provider;
-		} else {
-			enabled = false;
-			uuidprov = null;
-			plugin.getLogger().severe("Was not passed a valid instance of UUIDProvider!");
-		}
-
+		uuidprov = provider;
 		plugin = plug;
-		
+		if(uuidprov != null){
+			enabled = true;
+		}
 	}
 	
 	@Override
@@ -48,7 +33,7 @@ public class UUIDProvResolver implements UuidResolver {
 			return null;
 		}
 		
-		UUID uuid = UUIDProvider.retrieveUUID(username);
+		UUID uuid = UUIDProvider.retrieve(username);
 		if(uuid == null)
 			return null;
 		else
@@ -99,13 +84,8 @@ public class UUIDProvResolver implements UuidResolver {
 		
 		//Do a bulk UUID request from mojang.
 		Map<String, UUID> uuidMap = new HashMap<String, UUID>();
-		try{
-			UUIDFetcher f = new UUIDFetcher(fetch,true);
-			uuidMap = f.call();
-		} catch(Exception e){
-			plugin.getLogger().info("UUIDProvResolver : Exception : "+ e.getMessage());
-			throw e;
-		}
+		UUIDFetcher f = new UUIDFetcher(fetch,true);
+		uuidMap = f.call();
 
 		plugin.getLogger().info("UUIDProvResolver : fetched " + uuidMap.size() + " uuids from Mojang.");
 		
@@ -128,7 +108,11 @@ public class UUIDProvResolver implements UuidResolver {
 		if(!this.enabled){
 			return;
 		}
-		UUIDProvider.cacheAdd(uuid, username);		
+		boolean pd = UUIDProvider.cacheAdd(uuid, username);
+		if(pd == false){
+			plugin.getLogger().warning("UUIDProvResolver : Failed to add user " + username + " to the cache!");
+		}
+		
 	}
 
 	@Override
@@ -144,7 +128,7 @@ public class UUIDProvResolver implements UuidResolver {
 		if(!this.enabled){
 			return;
 		}
-		UUIDProvider.cacheClear();
+		plugin.getLogger().warning("ZPerms UUIDProvider Resolver wants to clear the entire cache - Denying!");
 		
 	}
 

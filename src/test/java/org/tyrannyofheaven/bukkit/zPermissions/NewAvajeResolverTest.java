@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Allan Saddi <allan@saddi.com>
+ * Copyright 2011 ZerothAngel <zerothangel@tyrannyofheaven.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ package org.tyrannyofheaven.bukkit.zPermissions;
 
 import java.util.Collections;
 
-import org.tyrannyofheaven.bukkit.zPermissions.dao.AvajePermissionDao2;
+import org.tyrannyofheaven.bukkit.zPermissions.dao.AvajePermissionDao;
+import org.tyrannyofheaven.bukkit.zPermissions.dao.InMemoryPermissionService;
 import org.tyrannyofheaven.bukkit.zPermissions.model.EntityMetadata;
 import org.tyrannyofheaven.bukkit.zPermissions.model.Entry;
 import org.tyrannyofheaven.bukkit.zPermissions.model.Inheritance;
@@ -68,8 +69,9 @@ public class NewAvajeResolverTest extends AbstractResolverTest {
             }
         }
 
-        dao = new AvajePermissionDao2(ebeanServer, null);
-        resolver = new PermissionsResolver(dao);
+        permissionService = new InMemoryPermissionService();
+        permissionService.setPermissionDao(new AvajePermissionDao(permissionService, ebeanServer, null));
+        resolver = new PermissionsResolver(permissionService);
         resolver.setDefaultGroup(TEST_GROUP1);
         resolver.setGroupPermissionFormats(Collections.singleton("group.%s"));
         resolver.setAssignedGroupPermissionFormats(Collections.singleton("assignedgroup.%s"));

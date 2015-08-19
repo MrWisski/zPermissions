@@ -56,7 +56,7 @@ public class ZPermissionsPlayerListener implements Listener {
     public void onAsyncPlayerPreLogin(AsyncPlayerPreLoginEvent event) {
         if (event.getLoginResult() == AsyncPlayerPreLoginEvent.Result.ALLOWED) {
             // Update display name
-            core.updateDisplayName(UUIDProvider.retrieveUUID(event.getName()), event.getName());
+            core.updateDisplayName(UUIDProvider.retrieve(event.getName()), event.getName());
         }
     }
 
@@ -96,7 +96,7 @@ public class ZPermissionsPlayerListener implements Listener {
     @EventHandler(priority=EventPriority.MONITOR)
     public void onPlayerJoinMonitor(PlayerJoinEvent event) {
         // Make default group membership explicit, if configured to do so...
-        core.handleExplicitDefaultGroupMembership(UUIDProvider.retrieveUUID(event.getPlayer().getName()), event.getPlayer().getName());
+        core.handleExplicitDefaultGroupMembership(event.getPlayer().getUniqueId(), event.getPlayer().getName());
     }
 
     @EventHandler(priority=EventPriority.MONITOR)
@@ -111,7 +111,7 @@ public class ZPermissionsPlayerListener implements Listener {
             }
         });
         // Pre-load cache of UuidResolver
-        uuidResolver.preload(event.getPlayer().getName(), UUIDProvider.retrieveUUID(event.getPlayer().getName()));
+        uuidResolver.preload(event.getPlayer().getName(), event.getPlayer().getUniqueId());
     }
 
     @EventHandler(priority=EventPriority.LOWEST)

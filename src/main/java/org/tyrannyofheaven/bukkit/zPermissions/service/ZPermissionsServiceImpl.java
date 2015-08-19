@@ -152,8 +152,8 @@ public class ZPermissionsServiceImpl implements ZPermissionsService {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
         if (player == null) return Collections.emptyList();
-        UUID uuid = UUIDProvider.retrieveUUID(player.getName());
-        
+        UUID uuid = UUIDProvider.retrieve(player.getName());
+
         return getPlayerAssignedGroups(uuid);
     }
 
@@ -186,7 +186,7 @@ public class ZPermissionsServiceImpl implements ZPermissionsService {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
         if (player == null) return Collections.emptySet();
-        UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        UUID uuid = UUIDProvider.retrieve(player.getName());
 
         return getPlayerGroups(uuid);
     }
@@ -260,7 +260,7 @@ public class ZPermissionsServiceImpl implements ZPermissionsService {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
         if (player == null) return Collections.emptyMap();
-        UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        UUID uuid = UUIDProvider.retrieve(player.getName());
         
         return getPlayerPermissions(worldName, regionNames, uuid);
     }
@@ -356,7 +356,7 @@ public class ZPermissionsServiceImpl implements ZPermissionsService {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
         if (player == null) return null;
-        UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        UUID uuid = UUIDProvider.retrieve(player.getName());
 
         return getPlayerMetadata(uuid, metadataName, type);
     }
@@ -472,7 +472,7 @@ public class ZPermissionsServiceImpl implements ZPermissionsService {
 
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
         if (player == null) return null;
-        UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        UUID uuid = UUIDProvider.retrieve(player.getName());
 
         return getPlayerPrimaryGroup(uuid);
     }

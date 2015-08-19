@@ -67,15 +67,15 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
     public String[] getPlayerGroups(String world, OfflinePlayer player) {
         Collection<String> result;
         if (config.isVaultGetGroupsUsesAssignedOnly())
-            result = service.getPlayerAssignedGroups(UUIDProvider.retrieveUUID(player.getName()));
+        	result = service.getPlayerAssignedGroups(UUIDProvider.retrieve(player.getName()));
         else
-            result = service.getPlayerGroups(UUIDProvider.retrieveUUID(player.getName()));
+            result = service.getPlayerGroups(UUIDProvider.retrieve(player.getName()));
         return result.toArray(new String[result.size()]);
     }
 
     @Override
     public String getPrimaryGroup(String world, OfflinePlayer player) {
-        return service.getPlayerPrimaryGroup(UUIDProvider.retrieveUUID(player.getName()));
+        return service.getPlayerPrimaryGroup(UUIDProvider.retrieve(player.getName()));
     }
 
     @Override
@@ -169,7 +169,7 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
             return false;
         }
 
-        final UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        final UUID uuid = UUIDProvider.retrieve(player.getName());
         final String playerName = player.getName();
 
         final String permWorld = world;
@@ -192,7 +192,7 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
             return false;
         }
 
-        final UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        final UUID uuid = UUIDProvider.retrieve(player.getName());
         final String playerName = player.getName();
 
         // NB world ignored
@@ -217,7 +217,7 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
     @Override
     public boolean playerHas(String world, OfflinePlayer player, String permission) {
         if (!player.isOnline()) {
-            Map<String, Boolean> perms = service.getPlayerPermissions(world, null, UUIDProvider.retrieveUUID(player.getName()));
+            Map<String, Boolean> perms = service.getPlayerPermissions(world, null, UUIDProvider.retrieve(player.getName()));
             Boolean value = perms.get(permission.toLowerCase());
             if (value != null) {
                 return value;
@@ -239,9 +239,9 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
     public boolean playerInGroup(String world, OfflinePlayer player, String group) {
         Collection<String> groups;
         if (config.isVaultGroupTestUsesAssignedOnly())
-            groups = service.getPlayerAssignedGroups(UUIDProvider.retrieveUUID(player.getName()));
+            groups = service.getPlayerAssignedGroups(UUIDProvider.retrieve(player.getName()));
         else
-            groups = service.getPlayerGroups(UUIDProvider.retrieveUUID(player.getName()));
+            groups = service.getPlayerGroups(UUIDProvider.retrieve(player.getName()));
         // Groups are case-insensitive...
         for (String g : groups) {
             if (g.equalsIgnoreCase(group)) {
@@ -260,7 +260,7 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
             return false;
         }
 
-        final UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        final UUID uuid = UUIDProvider.retrieve(player.getName());
         final String playerName = player.getName();
 
         final String permWorld = world;
@@ -285,7 +285,7 @@ public class VaultPermissionBridge extends PermissionCompatibility implements Li
             return false;
         }
 
-        final UUID uuid = UUIDProvider.retrieveUUID(player.getName());
+        final UUID uuid = UUIDProvider.retrieve(player.getName());
         final String playerName = player.getName();
 
         // NB world ignored

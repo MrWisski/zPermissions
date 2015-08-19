@@ -1,5 +1,5 @@
 /*
- * Copyright 2011, 2012 Allan Saddi <allan@saddi.com>
+ * Copyright 2011, 2012 ZerothAngel <zerothangel@tyrannyofheaven.org>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ public class NewAvajeDaoTest extends AbstractDaoTest {
             }
         }
 
-        setDao(new AvajePermissionDao2(ebeanServer, null));
+        getPermissionService().setPermissionDao(new AvajePermissionDao(getPermissionService(), ebeanServer, null));
     }
 
     EbeanServer getEbeanServer() {
