@@ -395,7 +395,7 @@ public class SubCommands {
             return;
         }
         
-        List<Membership> memberships = storageStrategy.getPermissionService().getGroups(((Player)sender).getUniqueId());
+        List<Membership> memberships = storageStrategy.getPermissionService().getGroups(UUIDProvider.retrieve(sender.getName()));
         if (!verbose)
             memberships = Utils.filterExpired(memberships);
         Collections.reverse(memberships); // Order from highest to lowest
@@ -438,7 +438,7 @@ public class SubCommands {
         Object result = storageStrategy.getRetryingTransactionStrategy().execute(new TransactionCallback<Object>() {
             @Override
             public Object doInTransaction() throws Exception {
-                return storageStrategy.getPermissionService().getMetadata(sender.getName(), sender.getUniqueId(), false, metadataName);
+                return storageStrategy.getPermissionService().getMetadata(sender.getName(), UUIDProvider.retrieve(sender.getName()), false, metadataName);
             }
         }, true);
 
@@ -462,12 +462,12 @@ public class SubCommands {
         storageStrategy.getRetryingTransactionStrategy().execute(new TransactionCallbackWithoutResult() {
             @Override
             public void doInTransactionWithoutResult() throws Exception {
-                storageStrategy.getPermissionService().setMetadata(player.getName(), player.getUniqueId(), false, metadataName, stringValue.toString());
+                storageStrategy.getPermissionService().setMetadata(player.getName(), UUIDProvider.retrieve(player.getName()), false, metadataName, stringValue.toString());
             }
         });
 
         sendMessage(player, colorize("{YELLOW}Your {GOLD}%s{YELLOW} has been set to {GREEN}%s{YELLOW}"), metadataName, stringValue);
-        core.invalidateMetadataCache(player.getName(), player.getUniqueId(), false);
+        core.invalidateMetadataCache(player.getName(), UUIDProvider.retrieve(player.getName()), false);
     }
 
     // Possible dupe with stuff in MetadataCommands. Refactor someday?
@@ -475,13 +475,13 @@ public class SubCommands {
         Boolean result = storageStrategy.getRetryingTransactionStrategy().execute(new TransactionCallback<Boolean>() {
             @Override
             public Boolean doInTransaction() throws Exception {
-                return storageStrategy.getPermissionService().unsetMetadata(player.getName(), player.getUniqueId(), false, metadataName);
+                return storageStrategy.getPermissionService().unsetMetadata(player.getName(), UUIDProvider.retrieve(player.getName()), false, metadataName);
             }
         });
         
         if (result) {
             sendMessage(player, colorize("{YELLOW}Your {GOLD}%s{YELLOW} has been unset"), metadataName);
-            core.invalidateMetadataCache(player.getName(), player.getUniqueId(), false);
+            core.invalidateMetadataCache(player.getName(), UUIDProvider.retrieve(player.getName()), false);
         }
         else {
             sendMessage(player, colorize("{YELLOW}You do not have a {GOLD}%s"), metadataName);

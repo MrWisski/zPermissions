@@ -518,8 +518,10 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         }
         // Instantiate UUID resolver service
         if(uuidprov != null){
-        	uuidResolver = new UUIDProvResolver(uuidprov, this);
+        	//Use UUIDProvider Resolver, instead of the mojang resolver.
+        	uuidResolver = new UUIDProvResolver(this);
         } else {
+        	//Just use the mojang resolver - will be OK on 1.7.10.
         	uuidResolver = new MojangUuidResolver(uuidResolverCacheSize, uuidResolverCacheTtl, TimeUnit.MINUTES);
         }
         // Attempt to initialize storage, retrying indefinitely (with exponential backoff)
@@ -607,7 +609,9 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
 
             // Set up UuidResolver cascade if StorageStrategy implementation happens
             // to also implement UuidResolver
-            if (storageStrategy instanceof UuidResolver) {
+            if (storageStrategy instanceof UuidResolver && uuidprov == null) {
+            	//If we're not using UUIDProvider services, allow the cascading UUID resolver to run.
+            	//This will increase efficiency on 1.7.10 servers without UUIDProvider.
                 log(this, "Using storage strategy as first-level UUID resolver.");
                 uuidResolver = new CascadingUuidResolver((UuidResolver)storageStrategy, uuidResolver);
             }
@@ -670,7 +674,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             // Make sure everyone currently online has permissions
             // NB Do in foreground
             for (Player player : Bukkit.getOnlinePlayers()) {
-                refreshPlayer(player.getUniqueId(), RefreshCause.GROUP_CHANGE);
+                refreshPlayer(UUIDProvider.retrieve(player.getName()), RefreshCause.GROUP_CHANGE);
             }
 
             // Start auto-refresh task, if one is configured
@@ -763,7 +767,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         player.removeMetadata(PLAYER_METADATA_KEY, this);
 
         // Remove dynamic permission and recalculate, if wanted
-        final String permName = DYNAMIC_PERMISSION_PREFIX + player.getUniqueId().toString();
+        final String permName = DYNAMIC_PERMISSION_PREFIX + UUIDProvider.retrieve(player.getName()).toString();
         Bukkit.getPluginManager().removePermission(permName);
         if (recalculate) {
             for (Permissible p : Bukkit.getPluginManager().getPermissionSubscriptions(permName)) {
@@ -853,7 +857,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         final Set<String> regions = getRegions(location, player);
 
         // Fetch existing state
-        final String permName = DYNAMIC_PERMISSION_PREFIX + player.getUniqueId().toString();
+        final String permName = DYNAMIC_PERMISSION_PREFIX + UUIDProvider.retrieve(player.getName()).toString();
         Permission perm = Bukkit.getPluginManager().getPermission(permName);
 
         PlayerState playerState = getPlayerState(player);
@@ -882,7 +886,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
             @Override
             public ResolverResult doInTransaction() throws Exception {
 //                fakeFailureChance();
-                return getResolver().resolvePlayer(player.getUniqueId(), world, regions);
+                return getResolver().resolvePlayer(UUIDProvider.retrieve(player.getName()), world, regions);
             }
         }, true);
 
@@ -962,7 +966,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         debug(this, "Refreshing all online players");
         Set<UUID> toRefresh = new HashSet<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            toRefresh.add(player.getUniqueId());
+            toRefresh.add(UUIDProvider.retrieve(player.getName()));
         }
         refreshTask.start(toRefresh);
     }
@@ -1008,7 +1012,7 @@ public class ZPermissionsPlugin extends JavaPlugin implements ZPermissionsCore, 
         for (Player player : Bukkit.getOnlinePlayers()) {
             PlayerState playerState = getPlayerState(player);
             if (playerState == null || playerState.getGroups().contains(groupName)) {
-                toRefresh.add(player.getUniqueId());
+                toRefresh.add(UUIDProvider.retrieve(player.getName()));
             }
         }
         

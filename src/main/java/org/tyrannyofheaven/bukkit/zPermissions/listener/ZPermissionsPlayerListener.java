@@ -96,7 +96,7 @@ public class ZPermissionsPlayerListener implements Listener {
     @EventHandler(priority=EventPriority.MONITOR)
     public void onPlayerJoinMonitor(PlayerJoinEvent event) {
         // Make default group membership explicit, if configured to do so...
-        core.handleExplicitDefaultGroupMembership(event.getPlayer().getUniqueId(), event.getPlayer().getName());
+        core.handleExplicitDefaultGroupMembership(UUIDProvider.retrieve(event.getPlayer().getName()), event.getPlayer().getName());
     }
 
     @EventHandler(priority=EventPriority.MONITOR)
@@ -111,7 +111,7 @@ public class ZPermissionsPlayerListener implements Listener {
             }
         });
         // Pre-load cache of UuidResolver
-        uuidResolver.preload(event.getPlayer().getName(), event.getPlayer().getUniqueId());
+        uuidResolver.preload(event.getPlayer().getName(), UUIDProvider.retrieve(event.getPlayer().getName()));
     }
 
     @EventHandler(priority=EventPriority.LOWEST)

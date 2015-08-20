@@ -13,18 +13,20 @@ import org.tyrannyofheaven.bukkit.zPermissions.ZPermissionsPlugin;
 import net.kaikk.mc.uuidprovider.UUIDFetcher;
 import net.kaikk.mc.uuidprovider.UUIDProvider;
 
+/**
+ * UUIDProvider resolver for zPermissions - Part of the 1.6.4 backport - 12-8-2015
+ * 
+ * @author MrWisski
+ * 
+ */
 public class UUIDProvResolver implements UuidResolver {
 
-	private UUIDProvider uuidprov = null;
 	private ZPermissionsPlugin plugin = null;
 	private boolean enabled = false;
 	
-	public UUIDProvResolver(UUIDProvider provider, ZPermissionsPlugin plug){
-		uuidprov = provider;
+	public UUIDProvResolver(ZPermissionsPlugin plug){
 		plugin = plug;
-		if(uuidprov != null){
-			enabled = true;
-		}
+		enabled = true;	
 	}
 	
 	@Override
@@ -84,8 +86,13 @@ public class UUIDProvResolver implements UuidResolver {
 		
 		//Do a bulk UUID request from mojang.
 		Map<String, UUID> uuidMap = new HashMap<String, UUID>();
-		UUIDFetcher f = new UUIDFetcher(fetch,true);
-		uuidMap = f.call();
+		try{
+			UUIDFetcher f = new UUIDFetcher(fetch,true);
+			uuidMap = f.call();
+		} catch(Exception e){
+			plugin.getLogger().info("UUIDProvResolver : Exception : "+ e.getMessage());
+			throw e;
+		}
 
 		plugin.getLogger().info("UUIDProvResolver : fetched " + uuidMap.size() + " uuids from Mojang.");
 		
@@ -108,11 +115,7 @@ public class UUIDProvResolver implements UuidResolver {
 		if(!this.enabled){
 			return;
 		}
-		boolean pd = UUIDProvider.cacheAdd(uuid, username);
-		if(pd == false){
-			plugin.getLogger().warning("UUIDProvResolver : Failed to add user " + username + " to the cache!");
-		}
-		
+		UUIDProvider.cacheAdd(uuid, username);		
 	}
 
 	@Override
@@ -128,7 +131,8 @@ public class UUIDProvResolver implements UuidResolver {
 		if(!this.enabled){
 			return;
 		}
-		plugin.getLogger().warning("ZPerms UUIDProvider Resolver wants to clear the entire cache - Denying!");
+		
+		plugin.getLogger().warning("zPerms requesting to empty UUIDProvider Cache - Denying!");
 		
 	}
 

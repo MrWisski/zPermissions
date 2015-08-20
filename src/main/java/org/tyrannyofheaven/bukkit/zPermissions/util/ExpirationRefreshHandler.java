@@ -76,7 +76,7 @@ public class ExpirationRefreshHandler implements Runnable {
         membershipQueue.clear();
         Date now = new Date();
         for (Player player : Bukkit.getOnlinePlayers()) {
-            for (Membership membership : storageStrategy.getPermissionService().getGroups(player.getUniqueId())) {
+            for (Membership membership : storageStrategy.getPermissionService().getGroups(UUIDProvider.retrieve(player.getName()))) {
                 if (membership.getExpiration() != null && membership.getExpiration().after(now)) {
                     membershipQueue.add(membership);
                 }
