@@ -44,8 +44,6 @@ rank-admin-broadcast: false
 
 region-managers:
 - WorldGuard
-- Residence
-- Factions
 
 inherited-metadata: false
 

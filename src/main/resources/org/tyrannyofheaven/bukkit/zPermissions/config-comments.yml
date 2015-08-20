@@ -66,7 +66,7 @@ kick-ops-on-error: |
 
 region-support: |
   Whether region-based permissions are enabled. Requires a region plugin such
-  as WorldGuard or Residence. Setting this to false will save some processing
+  as WorldGuard. Setting this to false will save some processing
   if you use a region plugin but don't use region-based permissions. Has no
   effect if a region plugin is not present.
 
